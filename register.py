@@ -5,7 +5,7 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-my_password = 'dinh9Thuan'
+my_password = '******'
 
 def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name):
     try:

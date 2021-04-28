@@ -5,7 +5,7 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-my_password = 'dinh9Thuan'
+my_password = '*****'
 
 def validateLogin(username, password):
     try:
