@@ -7,7 +7,7 @@ working_database = 'Retail'
 # Fill in your mySQL root pass
 my_password = 'dinh9Thuan'
 
-def validateLogin(username, password):
+def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name):
     try:
         connection = mysql.connector.connect(host='localhost',
                                              database=working_database,
@@ -17,22 +17,29 @@ def validateLogin(username, password):
             cursor = connection.cursor(buffered=True)
             cursor.execute('select database();')
         
-            """ Queries to find Buyer ID and the Cart associated with the buyer """
+            """ Queries to add a buyer's info from registration form into table buyers """
+            q = "INSERT INTO buyers (first_name, last_name, login_ID, passw) \
+                VALUES ('{}', '{}', '{}', '{}');".\
+                format(first_name.get(), last_name.get(), login_ID.get(), password.get())
+            cursor.execute(q)
+
+            """ Queries to get buyer_ID from registration info to insert into table banks """
             q = "SELECT buyer_ID FROM buyers \
                 WHERE login_ID = '{}' AND passw = '{}'".\
-                format(username.get(), password.get())
+                format(login_ID.get(), password.get())
             cursor.execute(q)
+
+            """ Queries to add the buyer's bank info from registration form into table banks """
             if cursor.rowcount == 1:
                 buyer_id = cursor.fetchall()[0][0]
                 print('Buyer ID:', buyer_id)
-                q = "SELECT item_ID FROM cart \
-                    WHERE buyer_ID = '{}'".format(buyer_id)
+                q = "INSERT INTO banks (buyer_ID, account_num, bank_name) \
+                    VALUES ('{}', '{}', '{}');".\
+                    format(buyer_id, account_num.get(), bank_name.get())
                 cursor.execute(q)
-                item_IDs = [x[0] for x in cursor.fetchall()]
-                print('Item IDs found in Cart:', item_IDs)  
             else:
-                print('Buyer ID  not found! Please enter ID and password or hit Register')
-            
+                print('Buyer ID  not found! System Error.')
+
     except Error as e:
         print('Error while connecting to MySQL', e)
 
@@ -42,4 +49,7 @@ def validateLogin(username, password):
             cursor.close()
             connection.close()
             
-    return
+            
+
+
+    
