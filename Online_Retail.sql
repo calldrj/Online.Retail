@@ -2,13 +2,6 @@ DROP DATABASE IF EXISTS Retail;
 CREATE database Retail;
 USE Retail;
 
-CREATE table banks (								
-	buyer_ID		int auto_increment,
-	account_num		int,
-    bank_name		varchar(20),
-    primary key 	(buyer_ID, account_num)
-) AUTO_INCREMENT = 1000;
-
 CREATE table buyers (
 	buyer_ID		int auto_increment,
 	first_name		varchar(40) CHARACTER SET ucs2,
@@ -19,7 +12,14 @@ CREATE table buyers (
     email			varchar(40) CHARACTER SET ucs2,
     address			varchar(60) CHARACTER SET ucs2,
     primary key 	(buyer_ID)
-    # foreign key 	(buyer_ID) references banks(buyer_ID)
+) AUTO_INCREMENT = 1000;
+
+CREATE table banks (								
+	buyer_ID		int auto_increment,
+	account_num		int,
+    bank_name		varchar(20),
+    primary key 	(buyer_ID, account_num),
+    foreign key 	(buyer_ID) references buyers(buyer_ID)
 ) AUTO_INCREMENT = 1000;
 
 CREATE table disc_category (
@@ -60,9 +60,8 @@ CREATE table cart (
 	buyer_ID		int,
     item_ID			int,
     quantity		int,
-    primary key 	(buyer_ID),
-    key				(item_ID),
-    foreign key 	(buyer_ID) references banks(buyer_ID),
+    primary key 	(buyer_ID, item_ID),
+    # foreign key 	(buyer_ID) references banks(buyer_ID),
     foreign key 	(item_ID)  references products(item_ID)
 );
 
