@@ -8,7 +8,7 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-my_password = '*****'
+my_password = 'dinh9Thuan'
 
 user = ''
 buyer_id = -1
@@ -51,8 +51,7 @@ def register_page(root):
 
     register = partial(buyer_info, first_name, last_name, login_ID, password, account_num, bank_name)
     submit_button = Button(root, text="Submit", width=10, command=register).grid(row=8, column=1,pady=10)
-    cancel_button = Button(root, text="Cancel", width=10,command=change_to_reg_page).grid(row=9, column=1)
-    back_button = Button(root, text="Back", width=10, command=change_to_login_page).grid(row=10, column=1)
+    back_button = Button(root, text="Cancel", width=10, command=change_to_login_page).grid(row=10, column=1)
     
     root.geometry("600x800")
 
@@ -121,8 +120,9 @@ def change_to_add_bank():
 def home_page(root, user):
     page = Frame(root)
     page.grid()
-    guest = user if len(user) > 0 else 'Guest'
-    w = Label(root, text='Welcome, {}!'.format(guest))
+    
+    guest = user if len(user) > 0 else 'Guest. You have not logged in'
+    w = Label(root, text='Welcome, {}.'.format(guest))
     w.grid(row=0, column=0)
 
     shop_button = Button(root, text="Shop", width=15, height =5,bg='#bce5ec').grid(row=1, column=0 ,pady=30,padx=25)
@@ -130,8 +130,8 @@ def home_page(root, user):
     acct_setting = partial(change_to_account_setting, user)
     acc_Setting_button = Button(root, text="Account Setting", width=15 , height =5,bg='#ebecbc',command=acct_setting).grid(row=2, column=0)
     if len(user) > 0:
-        user = ''
-        go_home = partial(change_to_home_page, user)
+        guest = ''
+        go_home = partial(change_to_home_page, guest)
         logout_button = Button(root, text="Logout", width=15, height =5, bg='#ecbcbc',command=go_home).grid(row=2, column=1)
     else:
         login_button = Button(root, text="Login", width=15, height =5, bg='#ecbcbc',command=change_to_login_page).grid(row=2, column=1)
@@ -147,11 +147,10 @@ def change_to_home_page(user):
 def account_setting(root, user):
     page = Frame(root)
     page.grid()
-    go_home = partial(change_to_home_page, user)
-    back_home_page_button = Button(root, text="Cancel", width=10,bg='#ebecbc',command=go_home).grid(row=0, column=0,pady=10)
-    change_bank_button = Button(root, text="Change Bank", width=15 , height =5,bg='#bce5ec',command=change_to_change_bank).grid(row=1, column=0 ,pady=30,padx=25)
+    add_bank_button = Button(root, text="Add Bank", width=15 , height =5,bg='#bce5ec',command=change_to_change_bank).grid(row=1, column=0 ,pady=30,padx=25)
     change_password_button = Button(root, text="Change Password", width=15 , height =5,bg='#bcecd5',command=change_to_change_password).grid(row=1, column=1)
-
+    go_home = partial(change_to_home_page, user)
+    cancel_button = Button(root, text="Cancel", width=10,bg='#ebecbc',command=go_home).grid(row=2, column=2, pady=10)
 def change_to_account_setting(user):
     for widget in root.winfo_children():
         widget.destroy()
@@ -234,7 +233,8 @@ def validateLogin(username, password):
                 change_to_home_page(username.get())
                 print('Item IDs found in Cart:', item_IDs)  
             else:
-                print('Buyer ID  not found! Please enter ID and password or hit Register')
+                user = ''
+                change_to_home_page(user)
             
     except Error as e:
         print('Error while connecting to MySQL', e)
