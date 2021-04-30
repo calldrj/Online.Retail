@@ -7,9 +7,9 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-my_password = '*****'
+mysql_password = 'dinh9Thuan'
 
-buyer, id, cart = '', -1, {}
+buyer, id, cart, what = '', -1, {}, ''
 root = Tk()
 
 """ HOME PAGE """
@@ -28,7 +28,7 @@ def home_page(root, buyer, id):
         go_home = partial(change_to_home_page, guest, id)
         logout_button = Button(root, text="Logout", width=15, height =5, bg='#ecbcbc',command=go_home).grid(row=1, column=1)
         
-        acct_setting = partial(change_to_account_setting, buyer, id)
+        acct_setting = partial(change_to_account_setting, buyer, id, what)
         acc_Setting_button = Button(root, text="Account Settings", width=15 , height =5, bg='#ebecbc', command=acct_setting).grid(row=2, column=0)
 
         checkout_button = Button(root, text="Checkout", width=15, height=5,bg='#bcecd5').grid(row=2, column=1)
@@ -118,26 +118,39 @@ def change_to_reg_page():
 ##########################################
  
 """ACCOUNT SETTINGS PAGE """
-def account_setting(root, buyer, id):
+def account_setting(root, buyer, id, what):
     page = Frame(root)
     page.grid()
-    
+
+    if what == 'bank':
+        w = Label(root, text='{}, you have successfully added your new bank account!.'.format(buyer))
+    elif what == 'pass':
+        w = Label(root, text='{}, you have successfully changed your password!.'.format(buyer))
+    elif what == 'mismatched':
+        w = Label(root, text='{}, your new and confirmed passwords mismatched!.'.format(buyer))
+    elif what == 'failed':
+        w = Label(root, text='{}, your current password incorrect!.'.format(buyer))
+    else:
+        w = Label(root, text='Welcome, {}.'.format(buyer))
+    w.grid(row=0, column=1)
+
     add_bank = partial(change_to_add_bank, buyer, id)
     add_bank_button = Button(root, text="Add Bank", width=15 , height =5,bg='#bce5ec',command=add_bank).grid(row=1, column=0, pady=30, padx=25)
     
-    change_password_button = Button(root, text="Change Password", width=15 , height =5,bg='#bcecd5',command='').grid(row=1, column=1, pady=30, padx=25)
+    change_pass = partial(change_to_change_password, buyer, id)
+    change_password_button = Button(root, text="Change Password", width=15 , height =5,bg='#bcecd5',command=change_pass).grid(row=1, column=1, pady=30, padx=25)
     
     go_home = partial(change_to_home_page, buyer, id)
     cancel_button = Button(root, text="Cancel", width=10, bg='#ebecbc', command=go_home).grid(row=2, column=1, pady=30)
 
-def change_to_account_setting(buyer, id):
+def change_to_account_setting(buyer, id, what):
     for widget in root.winfo_children():
         widget.destroy()
-    account_setting(root, buyer, id)
+    account_setting(root, buyer, id, what)
 
 ##########################################
 
-"""ADD BANK INFO PAGE"""
+""" ADD BANK INFO PAGE """
 def add_bank(root, buyer, id):
     page = Frame(root)
     page.grid()
@@ -145,19 +158,17 @@ def add_bank(root, buyer, id):
     title_lbl = Label(root, text="                 Add Bank Information").grid(row = 0, columnspan=2 , pady=10 )
 
     bank = StringVar()
-    bank_name_lbl = Label(root, text="Bank Name : ").grid(row=1, column=0)
+    bank_name_lbl = Label(root, text="Bank Name: ").grid(row=1, column=0)
     bank_name_entry = Entry(root, textvariable=bank).grid(row=1, column=1)
 
     acct_num = StringVar()
-    account_number_lbl = Label(root, text="Account # : ").grid(row=2, column=0)
+    account_number_lbl = Label(root, text="Account #: ").grid(row=2, column=0)
     account_number_entry = Entry(root, textvariable=acct_num).grid(row=2, column=1)
 
-    zip = StringVar()
-    zip_code_lbl = Label(root, text="Zip Code : ").grid(row=3, column=0)
-    zip_code_entry = Entry(root, textvariable=zip).grid(row=3, column=1)
-
-    submit_button = Button(root, text="Submit", width=10, command=bank_info).grid(row=5, column=1)
-    acct_setting = partial(change_to_account_setting, buyer, id)
+    add_bank = partial(bank_info, buyer, id,  bank, acct_num)
+    submit_button = Button(root, text="Submit", width=10, command=add_bank).grid(row=5, column=1)
+    
+    acct_setting = partial(change_to_account_setting, buyer, id, '')
     cancel_button = Button(root, text="Cancel", width=10, command=acct_setting).grid(row=5, column=0)
 
 def change_to_add_bank(buyer, id):
@@ -168,26 +179,32 @@ def change_to_add_bank(buyer, id):
 ############################################2
 
 """ CHANGE PASSWORD PAGE """
-def change_password(root):
+def change_password(root, buyer, id):
     page = Frame(root)
     page.grid()
 
-    back_home_page_button = Button(root, text="Cancel", width=10,bg='#ebecbc',command=change_to_home_page).grid(row=0, column=0,pady=10)
+    current = StringVar()
+    current_password_lbl = Label(root, text="Current Password: ").grid(row=1, column=0, padx=10, sticky=E)
+    current_password_entry = Entry(root, textvariable=current, show='*' ).grid(row=1, column=1, pady=10)
 
-    current_password_lbl = Label(root, text="Current Password : ").grid(row=1, column=0, sticky=E)
-    current_password_entry = Entry(root).grid(row=1, column=1,pady=10,sticky=W)
+    new_pass = StringVar()
+    new_password_lbl = Label(root, text="New Password: ").grid(row=2, column=0, padx=10, sticky=E)
+    new_password_entry = Entry(root, textvariable=new_pass, show='*').grid(row=2, column=1, pady=10)
 
-    new_password_lbl = Label(root, text="New Password : ").grid(row=2, column=0 ,sticky=E)
-    new_password_entry = Entry(root).grid(row=2, column=1, pady=10,sticky=W)
+    confirmed = StringVar()
+    confirm_new_password_lbl = Label(root, text="Confirm New Password: ").grid(row=3, column=0, padx=10, sticky=E)
+    confirm_new_password_entry = Entry(root, textvariable=confirmed, show='*').grid(row=3, column=1, pady=10)
+    
+    save_new = partial(update_password, buyer, id, '', new_pass, confirmed, current)
+    save_new_password_button = Button(root, text="Submit", width=10, bg='#ebecbc', command=save_new).grid(row=4, column=2, padx=10, pady=10)
 
-    confirm_new_password_lbl = Label(root, text="Confirm New Password : ").grid(row=3, column=0 ,sticky=E)
-    confirm_new_password_entry = Entry(root).grid(row=3, column=1, pady=10,sticky=W)
-    save_new_password_button = Button(root, text="Save ", width=30,bg='#ebecbc').grid(row=4, column=0,columnspan=4,padx=10,pady=10)
+    acct_setting = partial(change_to_account_setting, buyer, id, '')
+    cancel_button = Button(root, text="Cancel", width=10, command=acct_setting).grid(row=5, column=2)
 
-def change_to_change_password():
+def change_to_change_password(buyer, id):
     for widget in root.winfo_children():
         widget.destroy()
-    change_password(root)
+    change_password(root, buyer, id)
 
 ###############################################
 
@@ -197,7 +214,7 @@ def validateLogin(username, password):
         connection = mysql.connector.connect(host='localhost',
                                              database=working_database,
                                              user='root',
-                                             password=my_password)
+                                             password=mysql_password)
         if connection.is_connected():
             cursor = connection.cursor(buffered=True)
             cursor.execute('select database();')
@@ -209,13 +226,16 @@ def validateLogin(username, password):
             cursor.execute(q)
             if cursor.rowcount == 1:
                 buyer_id = cursor.fetchall()[0][0]
-                print('Buyer ID:', buyer_id)
                 q = "SELECT item_ID FROM cart \
                     WHERE buyer_ID = '{}'".format(buyer_id)
                 cursor.execute(q)
                 item_IDs = [x[0] for x in cursor.fetchall()]
                 change_to_home_page(username.get(), buyer_id)
                 print('Item IDs found in Cart:', item_IDs)  
+
+                """ DEBUG CODE HERE """
+                print('Buyer ID:', buyer_id)
+
             else:
                 user, id = '', -1
                 change_to_home_page(user, id)
@@ -237,7 +257,7 @@ def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name
         connection = mysql.connector.connect(host='localhost',
                                              database=working_database,
                                              user='root',
-                                             password=my_password)
+                                             password=mysql_password)
         if connection.is_connected():
             cursor = connection.cursor(buffered=True)
             cursor.execute('select database();')
@@ -257,12 +277,15 @@ def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name
             """ Queries to add the buyer's bank info from registration form into table banks """
             if cursor.rowcount == 1:
                 buyer_id = cursor.fetchall()[0][0]
-                print('Buyer ID:', buyer_id)
                 q = "INSERT INTO banks (buyer_ID, account_num, bank_name) \
                     VALUES ('{}', '{}', '{}');".\
                     format(buyer_id, account_num.get(), bank_name.get())
                 cursor.execute(q)
                 change_to_home_page(login_ID.get(), buyer_id)
+
+                """ DEBUG CODE HERE """
+                print('Buyer ID:', buyer_id)
+
             else:
                 print('Buyer ID  not found! System Error.')
             
@@ -278,40 +301,26 @@ def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name
 ###############################################
 
 """ ADD BANK INFO FUNC """       
-def bank_info(first_name, last_name, login_ID, password, account_num, bank_name):
+def bank_info(buyer, id,  bank, acct_num):
     try:
         connection = mysql.connector.connect(host='localhost',
                                              database=working_database,
                                              user='root',
-                                             password=my_password)
+                                             password=mysql_password)
         if connection.is_connected():
             cursor = connection.cursor(buffered=True)
             cursor.execute('select database();')
         
-            """ Queries to add a buyer's info from registration form into table buyers """
-            q = "INSERT INTO buyers (first_name, last_name, login_ID, passw) \
-                VALUES ('{}', '{}', '{}', '{}');".\
-                format(first_name.get(), last_name.get(), login_ID.get(), password.get())
-            cursor.execute(q)
-
-            """ Queries to get buyer_ID from registration info to insert into table banks """
-            q = "SELECT buyer_ID FROM buyers \
-                WHERE login_ID = '{}' AND passw = '{}'".\
-                format(login_ID.get(), password.get())
-            cursor.execute(q)
-
-            """ Queries to add the buyer's bank info from registration form into table banks """
-            if cursor.rowcount == 1:
-                buyer_id = cursor.fetchall()[0][0]
-                print('Buyer ID:', buyer_id)
-                q = "INSERT INTO banks (buyer_ID, account_num, bank_name) \
+            """ Queries to add the buyer's bank info from Add Bank form into table banks """
+            q = "INSERT INTO banks (buyer_ID, account_num, bank_name) \
                     VALUES ('{}', '{}', '{}');".\
-                    format(buyer_id, account_num.get(), bank_name.get())
-                cursor.execute(q)
-                change_to_home_page(login_ID, buyer_id)
-            else:
-                print('Buyer ID  not found! System Error.')
-            
+                    format(id, acct_num.get(), bank.get())
+            cursor.execute(q)
+            change_to_account_setting(buyer, id, 'bank')
+
+            """ DEBUG CODE HERE """
+            print('Buyer ID:', id)
+                 
     except Error as e:
         print('Error while connecting to MySQL', e)
 
@@ -320,6 +329,50 @@ def bank_info(first_name, last_name, login_ID, password, account_num, bank_name)
             connection.commit()
             cursor.close()
             connection.close()
+
+
+###############################################
+
+""" UPDATE PASSWORD FUNC """       
+def update_password(buyer, id, what, new_pass, confirmed, current):
+    print(new_pass.get(), confirmed.get())
+    if new_pass.get() != confirmed.get():
+        change_to_account_setting(buyer, id, 'mismatched')
+    else:
+        try:
+            connection = mysql.connector.connect(host='localhost',
+                                                database=working_database,
+                                                user='root',
+                                                password=mysql_password)
+            if connection.is_connected():
+                cursor = connection.cursor(buffered=True)
+                cursor.execute('select database();')
+
+                """ Queries to get the buyer's current password from buyer ID """
+                q = "SELECT passw FROM buyers WHERE buyer_ID = '{}'".format(id)
+                cursor.execute(q)
+                if current.get() != cursor.fetchall()[0][0]:
+                    change_to_account_setting(buyer, id, 'failed')
+                else:
+
+                    """ Queries to update the buyer's password """
+                    q = "UPDATE buyers SET passw = '{}' WHERE buyer_ID = '{}';".format(new_pass.get(), id)
+                    cursor.execute(q)
+                    change_to_account_setting(buyer, id, 'pass')
+
+                    """ DEBUG CODE HERE """
+                    print('Buyer ID:', id)
+                    print('New pass:', new_pass.get())
+            
+        except Error as e:
+            print('Error while connecting to MySQL', e)
+
+        finally:
+            if (connection.is_connected()):
+                connection.commit()
+                cursor.close()
+                connection.close()
+
                         
 ''' MAIN FUNC '''
 def main():
