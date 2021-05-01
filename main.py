@@ -21,25 +21,68 @@ def home_page(root, buyer, id):
     w = Label(root, text='Welcome, {}.'.format(guest))
     w.grid(row=0, column=1)
 
-    shop_button = Button(root, text="Shop", width=15, height=5,bg='#bce5ec').grid(row=1, column=0 , pady=30, padx=25)
+    go_shop = partial(go_shop_page, id)
+    shop_button = Button(root, text="Shop", width=15, height=5,bg='#bce5ec', command=go_shop).grid(row=1, column=0 , pady=30, padx=25)
     
     if len(buyer) > 0:
         guest = ''
         go_home = partial(change_to_home_page, guest, id)
-        logout_button = Button(root, text="Logout", width=15, height =5, bg='#ecbcbc',command=go_home).grid(row=1, column=1)
+        logout_button = Button(root, text="Logout", width=15, height =5, bg='#ecbcbc', command=go_home).grid(row=1, column=1)
         
         acct_setting = partial(change_to_account_setting, buyer, id, what)
-        acc_Setting_button = Button(root, text="Account Settings", width=15 , height =5, bg='#ebecbc', command=acct_setting).grid(row=2, column=0)
+        acc_Setting_button = Button(root, text="Account Settings", width=15, height =5, bg='#ebecbc', command=acct_setting).grid(row=2, column=0)
 
-        checkout_button = Button(root, text="Checkout", width=15, height=5,bg='#bcecd5').grid(row=2, column=1)
+        checkout_button = Button(root, text="Checkout", width=15, height=5, bg='#bcecd5').grid(row=2, column=1)
     else:
-        login_button = Button(root, text="Login", width=15, height =5, bg='#ecbcbc',command=change_to_login_page).grid(row=1, column=1)
+        login_button = Button(root, text="Login", width=15, height =5, bg='#ecbcbc', command=change_to_login_page).grid(row=1, column=1)
     root.geometry("600x600")
 
 def change_to_home_page(buyer, id):
     for widget in root.winfo_children():
         widget.destroy()
     home_page(root, buyer, id)
+
+###############################################
+
+""" SHOP PAGE """
+def shop_page(root, id):
+    welcome_lbl = Label(root, text="Welcome to our product catalog!").grid(row=0, column=1, padx=20, pady=20)
+    cat = Button(root, text='Category', width=15, height=2, bg='#bce5ec').grid(row=1, column=1, padx=20)
+    dis = Button(root, text='Discount Percent', width=15, height=2, bg='#bce5ec').grid(row=1, column=2, padx=20)
+
+    try:
+        connection = mysql.connector.connect(host='localhost',
+                                             database=working_database,
+                                             user='root',
+                                             password=mysql_password)
+        if connection.is_connected():
+            cursor = connection.cursor(buffered=True)
+            cursor.execute('select database();')
+        
+            """ Queries to find Buyer ID and the Cart associated with the buyer """
+            q = "SELECT  category, disc_percent FROM disc_category;"
+            cursor.execute(q)
+            k = 2
+            for row in cursor:
+                cat = Button(root, text=row[0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=20)
+                dis = Button(root, text=row[1], width=15, height=2, bg='#bce5ec').grid(row=k, column=2, padx=20)
+                k = k + 1
+
+    except Error as e:
+        print('Error while connecting to MySQL', e)
+
+    finally:
+        if (connection.is_connected()):
+            connection.commit()
+            cursor.close()
+            connection.close()
+    
+    root.geometry("600x600")
+
+def go_shop_page(id):
+    for widget in root.winfo_children():
+        widget.destroy()
+    shop_page(root, id)
 
 ###############################################
 
