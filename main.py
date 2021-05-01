@@ -7,7 +7,7 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-mysql_password = 'dinh9Thuan'
+mysql_password = '*****'
 
 buyer, id, cart, what = '', -1, {}, ''
 root = Tk()
@@ -59,7 +59,7 @@ def shop_page(root, id):
             cursor = connection.cursor(buffered=True)
             cursor.execute('select database();')
         
-            """ Queries to find Buyer ID and the Cart associated with the buyer """
+            """ Queries to select all categories in the product catalog """
             q = "SELECT  category, disc_percent FROM disc_category;"
             cursor.execute(q)
             k = 2
