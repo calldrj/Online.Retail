@@ -7,7 +7,7 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-mysql_password = '*****'
+mysql_password = 'dinh9Thuan'
 
 buyer, id, cart, what = '', -1, {}, ''
 root = Tk()
@@ -60,12 +60,13 @@ def shop_page(root, id):
             cursor.execute('select database();')
         
             """ Queries to select all categories in the product catalog """
-            q = "SELECT  category, disc_percent FROM disc_category;"
+            q = "SELECT  category, disc_percent, category_id FROM disc_category;"
             cursor.execute(q)
             k = 2
             for row in cursor:
-                cat = Button(root, text=row[0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=20)
-                dis = Button(root, text=row[1], width=15, height=2, bg='#bce5ec').grid(row=k, column=2, padx=20)
+                list_items_page = partial(go_items_page, row[0], row[1], row[2], id)
+                cat = Button(root, text=row[0], command=list_items_page, width=15, height=2, bg='#bce5ec').grid(row=k, column=1)
+                dis = Button(root, text=row[1], width=15, height=2, bg='#bce5ec').grid(row=k, column=2)
                 k = k + 1
 
     except Error as e:
@@ -77,6 +78,8 @@ def shop_page(root, id):
             cursor.close()
             connection.close()
     
+    go_home = partial(change_to_home_page, buyer, id)
+    cancel_button = Button(root, text="Cancel", command=go_home).grid(pady=10)
     root.geometry("600x600")
 
 def go_shop_page(id):
@@ -85,6 +88,74 @@ def go_shop_page(id):
     shop_page(root, id)
 
 ###############################################
+
+""" LIST OF ITEMS PAGE """
+def list_page(root, cat, dis_count, cat_id, id):
+
+    welcome_lbl = Label(root, text="Items for sale in {} category".format(cat)).grid(row=0, column=2, padx=10, pady=10)
+    Item = Button(root, text='Item', width=15, height=2, bg='#bce5ec').grid(row=1, column=1, padx=10)
+    Price = Button(root, text='Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=2, padx=10)
+    Discount = Button(root, text='Discount Amount (%)', width=15, height=2, bg='#bce5ec').grid(row=1, column=3, padx=10)
+    Final_Price = Button(root, text='Final Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=4, padx=10)
+    Quant = Button(root, text='Quantity', width=10, height=2, bg='#bce5ec').grid(row=1, column=5, padx=10)
+
+    try:
+        connection = mysql.connector.connect(host='localhost',
+                                             database=working_database,
+                                             user='root',
+                                             password=mysql_password)
+        if connection.is_connected():
+            cursor = connection.cursor(buffered=True)
+            cursor.execute('select database();')
+        
+            """ Queries to select all items in the category """
+            q = "SELECT  product_name, unit_price, item_ID FROM products WHERE category_ID = {};".format(cat_id)
+            cursor.execute(q)
+            k = 6
+            for row in cursor:
+                item  = Button(root, text=row[0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=10)
+                price = Button(root, text=row[1], width=10, height=2, bg='#bce5ec').grid(row=k, column=2, padx=10)
+                disc  = Button(root, text=dis_count, width=15, height=2, bg='#bce5ec').grid(row=k, column=3, padx=10)
+                p = round(row[1] * (1 - dis_count / 100), 2)
+                final_price = Button(root, text=p, width=10, height=2, bg='#bce5ec').grid(row=k, column=4, padx=10)
+                quantity = StringVar()
+                add_box = Entry(root, textvariable=quantity, width=10).grid(row=k, column=5, pady=10)
+                add_item = partial(go_to_cart, row[2], quantity, id)
+                add_button = Button(root, text="Add Item", command=add_item).grid(row=k, column=6, pady=10)
+                k = k + 1
+
+    except Error as e:
+        print('Error while connecting to MySQL', e)
+
+    finally:
+        if (connection.is_connected()):
+            connection.commit()
+            cursor.close()
+            connection.close()
+    
+    go_shop = partial(go_shop_page, id)
+    cancel_button = Button(root, text="Cancel", command=go_shop).grid(pady=10)
+    root.geometry("1200x600")
+
+def go_items_page(cat, dis_count, cat_id, id):
+    for widget in root.winfo_children():
+        widget.destroy()
+    list_page(root, cat, dis_count, cat_id, id)
+
+###############################################
+
+""" ADD TO CART PAGE """
+def add_to_cart(root, item_id, quantity, id):
+    print('buyer ID:', id)
+    print('item id:', item_id, 'quantity:', quantity.get())
+
+def go_to_cart(item_id, quantity, id):
+    for widget in root.winfo_children():
+        widget.destroy()
+    add_to_cart(root, item_id, quantity, id)
+
+###############################################
+
 
 """ LOGIN PAGE """
 def login_page(root, buyer, id):
@@ -114,7 +185,7 @@ def change_to_login_page():
 
 ############################################
 
-"""REGISTER PAGE """
+""" REGISTER PAGE """
 def register_page(root):
     page = Frame(root)
     page.grid()
@@ -160,7 +231,7 @@ def change_to_reg_page():
 
 ##########################################
  
-"""ACCOUNT SETTINGS PAGE """
+""" ACCOUNT SETTINGS PAGE """
 def account_setting(root, buyer, id, what):
     page = Frame(root)
     page.grid()
