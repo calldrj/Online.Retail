@@ -7,7 +7,7 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-mysql_password = '*****'
+mysql_password = 'dinh9Thuan'
 
 buyer, id, cart, what = '', -1, {}, ''
 root = Tk()
@@ -42,7 +42,6 @@ def change_to_home_page(buyer, id):
         widget.destroy()
     home_page(root, buyer, id)
 
-###############################################
 
 """ SHOP PAGE """
 def shop_page(root, id):
@@ -87,17 +86,16 @@ def go_shop_page(id):
         widget.destroy()
     shop_page(root, id)
 
-###############################################
 
 """ LIST OF ITEMS PAGE """
-def list_page(root, cat, dis_count, cat_id, id):
-
-    welcome_lbl = Label(root, text="Items for sale in {} category".format(cat)).grid(row=0, column=2, padx=10, pady=10)
-    Item = Button(root, text='Item', width=15, height=2, bg='#bce5ec').grid(row=1, column=1, padx=10)
-    Price = Button(root, text='Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=2, padx=10)
-    Discount = Button(root, text='Discount Amount (%)', width=15, height=2, bg='#bce5ec').grid(row=1, column=3, padx=10)
-    Final_Price = Button(root, text='Final Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=4, padx=10)
-    Quant = Button(root, text='Quantity', width=10, height=2, bg='#bce5ec').grid(row=1, column=5, padx=10)
+def list_page(root, cat, disc, cat_id, id):
+    px, py = 4, 8
+    welcome_lbl = Label(root, text="Items for sale in {} category".format(cat)).grid(row=0, column=2, padx=px, pady=py)
+    Item = Button(root, text='Item', width=15, height=2, bg='#bce5ec').grid(row=1, column=1, padx=px, pady=py)
+    Price = Button(root, text='Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=2, padx=px, pady=py)
+    Discount = Button(root, text='Discount Amount (%)', width=15, height=2, bg='#bce5ec').grid(row=1, column=3, padx=px, pady=py)
+    Final_Price = Button(root, text='Final Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=4, padx=px, pady=py)
+    Quant = Button(root, text='Quantity', width=10, height=2, bg='#bce5ec').grid(row=1, column=5, padx=px, pady=py)
 
     try:
         connection = mysql.connector.connect(host='localhost',
@@ -113,16 +111,23 @@ def list_page(root, cat, dis_count, cat_id, id):
             cursor.execute(q)
             k = 6
             for row in cursor:
-                item  = Button(root, text=row[0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=10)
-                price = Button(root, text=row[1], width=10, height=2, bg='#bce5ec').grid(row=k, column=2, padx=10)
-                disc  = Button(root, text=dis_count, width=15, height=2, bg='#bce5ec').grid(row=k, column=3, padx=10)
-                p = round(row[1] * (1 - dis_count / 100), 2)
-                final_price = Button(root, text=p, width=10, height=2, bg='#bce5ec').grid(row=k, column=4, padx=10)
+                item  = Button(root, text=row[0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=px, pady=py)
+                price = Button(root, text=row[1], width=10, height=2, bg='#bce5ec').grid(row=k, column=2, padx=px, pady=py)
+                discount  = Button(root, text=disc, width=15, height=2, bg='#bce5ec').grid(row=k, column=3, padx=px, pady=py)
+                p = round(row[1] * (1 - disc / 100), 2)
+                final_price = Button(root, text=p, width=10, height=2, bg='#bce5ec').grid(row=k, column=4, padx=px, pady=py)
                 quantity = StringVar()
-                add_box = Entry(root, textvariable=quantity, width=10).grid(row=k, column=5, pady=10)
-                add_item = partial(go_to_cart, row[2], quantity, id)
-                add_button = Button(root, text="Add Item", command=add_item).grid(row=k, column=6, pady=10)
+                add_box = Entry(root, textvariable=quantity, width=10).grid(row=k, column=5, padx=px, pady=py)
+                add_item = partial(go_to_cart, cat, disc, cat_id, row[2], quantity, id)
+                add_button = Button(root, text="Add Item", command=add_item).grid(row=k, column=6, padx=px, pady=py)
                 k = k + 1
+
+            checkout = partial(view_cart_page, id)
+            checkout_button = Button(root, text="Checkout", width=8, command=checkout).grid(row=k, column=2, padx=px, pady=py)
+
+            go_shop = partial(go_shop_page, id)
+            cancel_button = Button(root, text="Cancel", command=go_shop).grid(row=k, column=3, padx=px, pady=py)
+
 
     except Error as e:
         print('Error while connecting to MySQL', e)
@@ -132,29 +137,143 @@ def list_page(root, cat, dis_count, cat_id, id):
             connection.commit()
             cursor.close()
             connection.close()
-    
-    go_shop = partial(go_shop_page, id)
-    cancel_button = Button(root, text="Cancel", command=go_shop).grid(pady=10)
-    root.geometry("1200x600")
 
-def go_items_page(cat, dis_count, cat_id, id):
+    root.geometry("1000x600")
+
+def go_items_page(cat, disc, cat_id, id):
     for widget in root.winfo_children():
         widget.destroy()
-    list_page(root, cat, dis_count, cat_id, id)
+    list_page(root, cat, disc, cat_id, id)
 
-###############################################
+""" VIEW SHOPPING CART """
+def view_cart(root, id):
+    print('Buyer ID:', id)
+    px, py = 4, 8
+    welcome_lbl = Label(root, text="Items ready for checkout:").grid(row=0, column=2, padx=px, pady=py)
+    Item = Button(root, text='Item', width=15, height=2, bg='#bce5ec').grid(row=1, column=1, padx=px, pady=py)
+    Final_Price = Button(root, text='Final Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=2, padx=px, pady=py)
+    Quant = Button(root, text='Quantity', width=15, height=2, bg='#bce5ec').grid(row=1, column=3, padx=px, pady=py)
+    Subtotal = Button(root, text='Sub Total', width=10, height=2, bg='#bce5ec').grid(row=1, column=4, padx=px, pady=py)
+
+    try:
+        connection = mysql.connector.connect(host='localhost',
+                                             database=working_database,
+                                             user='root',
+                                             password=mysql_password)
+        if connection.is_connected():
+            cursor = connection.cursor(buffered=True)
+            cursor.execute('select database();')
+        
+            """ Queries to select all items in the category """
+            q = "SELECT item_ID, quantity FROM cart WHERE buyer_ID = {};".format(id)
+            cursor.execute(q)
+            k = 6
+            for row in cursor:
+                sub_cursor = connection.cursor(buffered=True)
+                sub_q = "SELECT product_name, unit_price, category_ID \
+                         FROM products WHERE item_ID = '{}';".format(row[0])
+                sub_cursor.execute(sub_q)
+                s1 = sub_cursor.fetchall()
+                print(s1[0][2])
+
+                sub_q = "SELECT disc_percent FROM disc_category WHERE category_ID = '{}';".format(s1[0][2])
+                sub_cursor.execute(sub_q)
+                s2 = sub_cursor.fetchall()
+                print(s2[0][0])
+
+                final_price = round(s1[0][1] * (1 - s2[0][0] / 100), 2)
+
+                Item = Button(root, text=s1[0][0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=px, pady=py)
+
+                Final_Price = Button(root, text=final_price, width=10, height=2, bg='#bce5ec').grid(row=k, column=2, padx=px, pady=py)
+
+                Quant = Button(root, text=row[1], width=15, height=2, bg='#bce5ec').grid(row=k, column=3, padx=px, pady=py)
+
+                sub_total = final_price * row[1]
+                Subtotal = Button(root, text=sub_total, width=10, height=2, bg='#bce5ec').grid(row=k, column=4, padx=px, pady=py)
+                
+                k = k + 1
+            
+            # pay = partial(view_cart_page, id)
+            pay_button = Button(root, text="Pay", width=8, command='').grid(row=k, column=2, padx=px, pady=py)
+        
+            go_shop = partial(go_shop_page, id)
+            cancel_button = Button(root, text="Cancel", command=go_shop).grid(row=k, column=3, padx=px, pady=py)
+
+
+    except Error as e:
+        print('Error while connecting to MySQL', e)
+
+    finally:
+        if (connection.is_connected()):
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+    root.geometry("1000x600")
+
+
+def view_cart_page(id):
+    for widget in root.winfo_children():
+        widget.destroy()
+    view_cart(root, id)
 
 """ ADD TO CART PAGE """
-def add_to_cart(root, item_id, quantity, id):
+def add_to_cart(root, cat, disc, cat_id, item_id, quantity, id):
+
+    ''' DEBUG CODE HERE '''
     print('buyer ID:', id)
     print('item id:', item_id, 'quantity:', quantity.get())
 
-def go_to_cart(item_id, quantity, id):
+    try:
+        connection = mysql.connector.connect(host='localhost',
+                                             database=working_database,
+                                             user='root',
+                                             password=mysql_password)
+        if connection.is_connected():
+            cursor = connection.cursor(buffered=True)
+            cursor.execute('select database();')
+        
+            """ Queries to  """
+            q = "SELECT buyer_ID FROM cart WHERE item_ID = '{}'".format(item_id)
+            cursor.execute(q)
+            if cursor.rowcount == 0:
+                q = "INSERT INTO cart (buyer_ID, item_ID, quantity) VALUES ('{}', '{}', '{}');".\
+                    format(id, item_id, quantity.get())
+                cursor.execute(q)
+            else:
+                q = "SELECT quantity FROM cart WHERE buyer_ID = '{}' AND item_ID = '{}';".\
+                    format(id, item_id)
+                cursor.execute(q)
+                update_quantity = int(cursor.fetchall()[0][0]) + int(quantity.get())
+
+                q = "UPDATE cart SET quantity = '{}' WHERE buyer_ID = '{}' AND item_ID = '{}';".\
+                    format(update_quantity, id, item_id)
+                cursor.execute(q)
+
+            q = "SELECT login_ID FROM buyers WHERE buyer_ID = '{}'".format(id)
+            cursor.execute(q)
+
+            if cursor.rowcount == 1:
+                username = cursor.fetchall()[0][0]
+            else:
+                user, id = '', -1
+
+            go_items_page(cat, disc, cat_id, id)
+    
+    except Error as e:
+        print('Error while connecting to MySQL', e)
+
+    finally:
+        if (connection.is_connected()):
+            connection.commit()
+            cursor.close()
+            connection.close()
+    
+def go_to_cart(cat, disc, cat_id, item_id, quantity, id):
     for widget in root.winfo_children():
         widget.destroy()
-    add_to_cart(root, item_id, quantity, id)
-
-###############################################
+    add_to_cart(root, cat, disc, cat_id, item_id, quantity, id)
 
 
 """ LOGIN PAGE """
@@ -183,7 +302,6 @@ def change_to_login_page():
         widget.destroy()
     login_page(root, buyer, id)
 
-############################################
 
 """ REGISTER PAGE """
 def register_page(root):
@@ -229,7 +347,6 @@ def change_to_reg_page():
         widget.destroy()
     register_page(root)
 
-##########################################
  
 """ ACCOUNT SETTINGS PAGE """
 def account_setting(root, buyer, id, what):
@@ -262,7 +379,6 @@ def change_to_account_setting(buyer, id, what):
         widget.destroy()
     account_setting(root, buyer, id, what)
 
-##########################################
 
 """ ADD BANK INFO PAGE """
 def add_bank(root, buyer, id):
@@ -290,7 +406,6 @@ def change_to_add_bank(buyer, id):
         widget.destroy()
     add_bank(root, buyer, id)
 
-############################################2
 
 """ CHANGE PASSWORD PAGE """
 def change_password(root, buyer, id):
@@ -320,7 +435,6 @@ def change_to_change_password(buyer, id):
         widget.destroy()
     change_password(root, buyer, id)
 
-###############################################
 
 """ LOGIN VALIDATE FUNC """
 def validateLogin(username, password):
@@ -347,7 +461,7 @@ def validateLogin(username, password):
                 change_to_home_page(username.get(), buyer_id)
                 print('Item IDs found in Cart:', item_IDs)  
 
-                """ DEBUG CODE HERE """
+                ''' DEBUG CODE HERE '''
                 print('Buyer ID:', buyer_id)
 
             else:
@@ -363,7 +477,6 @@ def validateLogin(username, password):
             cursor.close()
             connection.close()
 
-###############################################
 
 """ INSERT NEW BUYER INFO FUNC """           
 def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name):
@@ -397,7 +510,7 @@ def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name
                 cursor.execute(q)
                 change_to_home_page(login_ID.get(), buyer_id)
 
-                """ DEBUG CODE HERE """
+                ''' DEBUG CODE HERE '''
                 print('Buyer ID:', buyer_id)
 
             else:
@@ -412,7 +525,6 @@ def buyer_info(first_name, last_name, login_ID, password, account_num, bank_name
             cursor.close()
             connection.close()
 
-###############################################
 
 """ ADD BANK INFO FUNC """       
 def bank_info(buyer, id,  bank, acct_num):
@@ -432,7 +544,7 @@ def bank_info(buyer, id,  bank, acct_num):
             cursor.execute(q)
             change_to_account_setting(buyer, id, 'bank')
 
-            """ DEBUG CODE HERE """
+            ''' DEBUG CODE HERE '''
             print('Buyer ID:', id)
                  
     except Error as e:
@@ -444,8 +556,6 @@ def bank_info(buyer, id,  bank, acct_num):
             cursor.close()
             connection.close()
 
-
-###############################################
 
 """ UPDATE PASSWORD FUNC """       
 def update_password(buyer, id, what, new_pass, confirmed, current):
@@ -474,7 +584,7 @@ def update_password(buyer, id, what, new_pass, confirmed, current):
                     cursor.execute(q)
                     change_to_account_setting(buyer, id, 'pass')
 
-                    """ DEBUG CODE HERE """
+                    ''' DEBUG CODE HERE '''
                     print('Buyer ID:', id)
                     print('New pass:', new_pass.get())
             
@@ -488,7 +598,7 @@ def update_password(buyer, id, what, new_pass, confirmed, current):
                 connection.close()
 
                         
-''' MAIN FUNC '''
+""" MAIN FUNC """
 def main():
     home_page(root, buyer, id)
     root.title("Online Retail")
