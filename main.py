@@ -18,8 +18,7 @@ def home_page(root, buyer, id):
     page.grid()
     
     guest = buyer if len(buyer) > 0 else 'Guest. You have not logged in'
-    w = Label(root, text='Welcome, {}.'.format(guest))
-    w.grid(row=0, column=1)
+    w = Label(root, text='Welcome, {}.'.format(guest)).grid(row=0, column=0, padx=20)
 
     go_shop = partial(go_shop_page, id)
     shop_button = Button(root, text="Shop", width=15, height=5,bg='#bce5ec', command=go_shop).grid(row=1, column=0 , pady=30, padx=25)
@@ -27,15 +26,16 @@ def home_page(root, buyer, id):
     if len(buyer) > 0:
         guest = ''
         go_home = partial(change_to_home_page, guest, id)
-        logout_button = Button(root, text="Logout", width=15, height =5, bg='#ecbcbc', command=go_home).grid(row=1, column=1)
+        logout_button = Button(root, text="Logout", width=15, height=5, bg='#ecbcbc', command=go_home).grid(row=1, column=1)
         
         acct_setting = partial(change_to_account_setting, buyer, id, what)
-        acc_Setting_button = Button(root, text="Account Settings", width=15, height =5, bg='#ebecbc', command=acct_setting).grid(row=2, column=0)
+        acc_Setting_button = Button(root, text="Account Settings", width=15, height=5, bg='#ebecbc', command=acct_setting).grid(row=2, column=0)
 
-        checkout_button = Button(root, text="Checkout", width=15, height=5, bg='#bcecd5').grid(row=2, column=1)
+        cart = partial(view_cart_page, id)
+        view_cart_button = Button(root, text="View Cart", command=cart, width=15, height=5, bg='#bcecd5').grid(row=2, column=1)
     else:
-        login_button = Button(root, text="Login", width=15, height =5, bg='#ecbcbc', command=change_to_login_page).grid(row=1, column=1)
-    root.geometry("600x600")
+        login_button = Button(root, text="Login", width=15, height=5, bg='#ecbcbc', command=change_to_login_page).grid(row=1, column=1)
+    root.geometry("500x400")
 
 def change_to_home_page(buyer, id):
     for widget in root.winfo_children():
@@ -78,8 +78,8 @@ def shop_page(root, id):
             connection.close()
     
     go_home = partial(change_to_home_page, buyer, id)
-    cancel_button = Button(root, text="Cancel", command=go_home).grid(pady=10)
-    root.geometry("600x600")
+    cancel_button = Button(root, text="Cancel", command=go_home).grid(row=k + 1, column=1, pady=10)
+    root.geometry("500x400")
 
 def go_shop_page(id):
     for widget in root.winfo_children():
@@ -122,12 +122,11 @@ def list_page(root, cat, disc, cat_id, id):
                 add_button = Button(root, text="Add Item", command=add_item).grid(row=k, column=6, padx=px, pady=py)
                 k = k + 1
 
-            checkout = partial(view_cart_page, id)
-            checkout_button = Button(root, text="Checkout", width=8, command=checkout).grid(row=k, column=2, padx=px, pady=py)
-
+            cart = partial(view_cart_page, id)
+            checkout_button = Button(root, text="View Cart", width=8, command=cart).grid(row=k, column=3, padx=px, pady=py)
+        
             go_shop = partial(go_shop_page, id)
-            cancel_button = Button(root, text="Cancel", command=go_shop).grid(row=k, column=3, padx=px, pady=py)
-
+            cancel_button = Button(root, text="Cancel", command=go_shop).grid(row=k + 2, column=3, padx=px, pady=py)
 
     except Error as e:
         print('Error while connecting to MySQL', e)
@@ -147,12 +146,11 @@ def go_items_page(cat, disc, cat_id, id):
 
 """ VIEW SHOPPING CART """
 def view_cart(root, id):
-    print('Buyer ID:', id)
-    px, py = 4, 8
+    px, py = 10, 8
     welcome_lbl = Label(root, text="Items ready for checkout:").grid(row=0, column=2, padx=px, pady=py)
     Item = Button(root, text='Item', width=15, height=2, bg='#bce5ec').grid(row=1, column=1, padx=px, pady=py)
     Final_Price = Button(root, text='Final Price', width=10, height=2, bg='#bce5ec').grid(row=1, column=2, padx=px, pady=py)
-    Quant = Button(root, text='Quantity', width=15, height=2, bg='#bce5ec').grid(row=1, column=3, padx=px, pady=py)
+    Quant = Button(root, text='Quantity', width=10, height=2, bg='#bce5ec').grid(row=1, column=3, padx=px, pady=py)
     Subtotal = Button(root, text='Sub Total', width=10, height=2, bg='#bce5ec').grid(row=1, column=4, padx=px, pady=py)
 
     try:
@@ -167,39 +165,38 @@ def view_cart(root, id):
             """ Queries to select all items in the category """
             q = "SELECT item_ID, quantity FROM cart WHERE buyer_ID = {};".format(id)
             cursor.execute(q)
-            k = 6
+            total, k = 0, 6
             for row in cursor:
                 sub_cursor = connection.cursor(buffered=True)
                 sub_q = "SELECT product_name, unit_price, category_ID \
                          FROM products WHERE item_ID = '{}';".format(row[0])
                 sub_cursor.execute(sub_q)
                 s1 = sub_cursor.fetchall()
-                print(s1[0][2])
 
                 sub_q = "SELECT disc_percent FROM disc_category WHERE category_ID = '{}';".format(s1[0][2])
                 sub_cursor.execute(sub_q)
                 s2 = sub_cursor.fetchall()
-                print(s2[0][0])
-
-                final_price = round(s1[0][1] * (1 - s2[0][0] / 100), 2)
 
                 Item = Button(root, text=s1[0][0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=px, pady=py)
-
+                
+                final_price = round(s1[0][1] * (1 - s2[0][0] / 100), 2)
                 Final_Price = Button(root, text=final_price, width=10, height=2, bg='#bce5ec').grid(row=k, column=2, padx=px, pady=py)
 
-                Quant = Button(root, text=row[1], width=15, height=2, bg='#bce5ec').grid(row=k, column=3, padx=px, pady=py)
+                Quant = Button(root, text=row[1], width=10, height=2, bg='#bce5ec').grid(row=k, column=3, padx=px, pady=py)
 
                 sub_total = final_price * row[1]
                 Subtotal = Button(root, text=sub_total, width=10, height=2, bg='#bce5ec').grid(row=k, column=4, padx=px, pady=py)
                 
-                k = k + 1
+                total, k = total + sub_total, k + 1
+
+            total_price = Button(root, text='Total', width=10, height=2, bg='#bce5ec').grid(row=k, column=3, padx=px, pady=py)
+            all_subtotal = Button(root, text=total, width=10, height=2, bg='#bce5ec').grid(row=k, column=4, padx=px, pady=py)
             
             # pay = partial(view_cart_page, id)
-            pay_button = Button(root, text="Pay", width=8, command='').grid(row=k, column=2, padx=px, pady=py)
-        
+            pay_button = Button(root, text="Pay", width=8, command='').grid(row=k + 1, column=2, padx=px, pady=py)
+            
             go_shop = partial(go_shop_page, id)
-            cancel_button = Button(root, text="Cancel", command=go_shop).grid(row=k, column=3, padx=px, pady=py)
-
+            cancel_button = Button(root, text="Cancel", command=go_shop).grid(row=k + 2, column=2, padx=px, pady=py)
 
     except Error as e:
         print('Error while connecting to MySQL', e)
@@ -210,7 +207,7 @@ def view_cart(root, id):
             cursor.close()
             connection.close()
 
-    root.geometry("1000x600")
+    root.geometry("800x600")
 
 
 def view_cart_page(id):
@@ -578,7 +575,6 @@ def update_password(buyer, id, what, new_pass, confirmed, current):
                 if current.get() != cursor.fetchall()[0][0]:
                     change_to_account_setting(buyer, id, 'failed')
                 else:
-
                     """ Queries to update the buyer's password """
                     q = "UPDATE buyers SET passw = '{}' WHERE buyer_ID = '{}';".format(new_pass.get(), id)
                     cursor.execute(q)
