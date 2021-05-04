@@ -7,7 +7,7 @@ from mysql.connector import Error
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-mysql_password = '*****'
+mysql_password = '********'
 
 buyer, id, cart, what = '', -1, {}, ''
 root = Tk()
