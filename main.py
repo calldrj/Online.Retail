@@ -192,8 +192,8 @@ def view_cart(root, id):
             total_price = Button(root, text='Total', width=10, height=2, bg='#bce5ec').grid(row=k, column=3, padx=px, pady=py)
             all_subtotal = Button(root, text=total, width=10, height=2, bg='#bce5ec').grid(row=k, column=4, padx=px, pady=py)
             
-            # pay = partial(view_cart_page, id)
-            pay_button = Button(root, text="Pay", width=8, command='').grid(row=k + 1, column=2, padx=px, pady=py)
+            pay = partial(view_payment_page, id)
+            pay_button = Button(root, text="Pay", width=8, command=pay).grid(row=k + 1, column=2, padx=px, pady=py)
             
             go_shop = partial(go_shop_page, id)
             cancel_button = Button(root, text="Cancel", command=go_shop).grid(row=k + 2, column=2, padx=px, pady=py)
@@ -214,6 +214,54 @@ def view_cart_page(id):
     for widget in root.winfo_children():
         widget.destroy()
     view_cart(root, id)
+
+
+""" PAYMENT REVIEW """
+def view_payment(root, id):
+    px, py = 10, 10
+    welcome_lbl = Label(root, text="Please select bank account for payment.").grid(row=0, column=2, padx=px, pady=py)
+    bank_name = Button(root, text='Bank Name', width=15, height=2, bg='#bce5ec').grid(row=1, column=1, padx=px, pady=py)
+    acct_num  = Button(root, text='Account Number', width=15, height=2, bg='#bce5ec').grid(row=1, column=2, padx=px, pady=py)
+
+    try:
+        connection = mysql.connector.connect(host='localhost',
+                                             database=working_database,
+                                             user='root',
+                                             password=mysql_password)
+        if connection.is_connected():
+            cursor = connection.cursor(buffered=True)
+            cursor.execute('select database();')
+        
+            """ Queries to select all items in the category """
+            q = "SELECT bank_name, account_num FROM banks WHERE buyer_ID = {};".format(id)
+            cursor.execute(q)
+            k = 6
+            for row in cursor:
+                bank_name = Button(root, text=row[0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=px, pady=py)
+                acct_num  = Button(root, text=row[1], width=15, height=2, bg='#bce5ec').grid(row=k, column=2, padx=px, pady=py)
+                
+                # select_account = partial(go_confirm_page, id, acct_num)
+                select__acct_button = Button(root, text="Select Account", command='').grid(row=k, column=6, padx=px, pady=py)
+                k = k + 1
+            
+            cart = partial(view_cart_page, id)
+            cancel_button = Button(root, text="Cancel", command=cart).grid(row=k + 2, column=2, padx=px, pady=py)
+
+    except Error as e:
+        print('Error while connecting to MySQL', e)
+
+    finally:
+        if (connection.is_connected()):
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+    root.geometry("800x600")
+
+def view_payment_page(id):
+    for widget in root.winfo_children():
+        widget.destroy()
+    view_payment(root, id)
 
 """ ADD TO CART PAGE """
 def add_to_cart(root, cat, disc, cat_id, item_id, quantity, id):
