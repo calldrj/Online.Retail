@@ -349,6 +349,7 @@ def change_to_reg_page():
 def account_setting(root, buyer, id, what):
     page = Frame(root)
     page.grid()
+    py, px = 20, 20
 
     if what == 'bank':
         w = Label(root, text='{}, you have successfully added your new bank account!.'.format(buyer))
@@ -360,16 +361,20 @@ def account_setting(root, buyer, id, what):
         w = Label(root, text='{}, your current password incorrect!.'.format(buyer))
     else:
         w = Label(root, text='Welcome, {}.'.format(buyer))
-    w.grid(row=0, column=1)
+        
+    w.grid(row=0, column=0)
 
     add_bank = partial(change_to_add_bank, buyer, id)
-    add_bank_button = Button(root, text="Add Bank", width=15 , height =5,bg='#bce5ec',command=add_bank).grid(row=1, column=0, pady=30, padx=25)
+    add_bank_button = Button(root, text="Add Bank", width=15 , height=5, bg='#bce5ec', command=add_bank).grid(row=2, column=0, pady=py, padx=px)
     
     change_pass = partial(change_to_change_password, buyer, id)
-    change_password_button = Button(root, text="Change Password", width=15 , height =5,bg='#bcecd5',command=change_pass).grid(row=1, column=1, pady=30, padx=25)
+    change_password_button = Button(root, text="Change Password", width=15 , height=5, bg='#bcecd5',command=change_pass).grid(row=2, column=1)
     
     go_home = partial(change_to_home_page, buyer, id)
-    cancel_button = Button(root, text="Cancel", width=10, bg='#ebecbc', command=go_home).grid(row=2, column=1, pady=30)
+    cancel_button = Button(root, text="Cancel", width=10, bg='#ebecbc', command=go_home).grid(row=3, column=0, pady=py, padx=px)
+
+    root.geometry("600x400")
+
 
 def change_to_account_setting(buyer, id, what):
     for widget in root.winfo_children():
@@ -397,6 +402,8 @@ def add_bank(root, buyer, id):
     
     acct_setting = partial(change_to_account_setting, buyer, id, '')
     cancel_button = Button(root, text="Cancel", width=10, command=acct_setting).grid(row=5, column=0)
+
+    root.geometry("400x400")
 
 def change_to_add_bank(buyer, id):
     for widget in root.winfo_children():
@@ -582,8 +589,7 @@ def update_password(buyer, id, what, new_pass, confirmed, current):
 
                     ''' DEBUG CODE HERE '''
                     print('Buyer ID:', id)
-                    print('New pass:', new_pass.get())
-            
+                    
         except Error as e:
             print('Error while connecting to MySQL', e)
 
