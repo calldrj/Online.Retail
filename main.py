@@ -2,12 +2,13 @@ from tkinter import *
 from functools import partial
 import mysql.connector
 from mysql.connector import Error
+import random
 
 # Fill in the database you want to work on
 working_database = 'Retail'
 
 # Fill in your mySQL root pass
-mysql_password = '********'
+mysql_password = '*****'
 
 buyer, id, cart, what = '', -1, {}, ''
 root = Tk()
@@ -240,8 +241,8 @@ def view_payment(root, id):
                 bank_name = Button(root, text=row[0], width=15, height=2, bg='#bce5ec').grid(row=k, column=1, padx=px, pady=py)
                 acct_num  = Button(root, text=row[1], width=15, height=2, bg='#bce5ec').grid(row=k, column=2, padx=px, pady=py)
                 
-                # select_account = partial(go_confirm_page, id, acct_num)
-                select__acct_button = Button(root, text="Select Account", command='').grid(row=k, column=6, padx=px, pady=py)
+                select_account = partial(confirm_payment_page, id, row[0], row[1])
+                select__acct_button = Button(root, text="Select Account", command=select_account).grid(row=k, column=6, padx=px, pady=py)
                 k = k + 1
             
             cart = partial(view_cart_page, id)
@@ -262,6 +263,43 @@ def view_payment_page(id):
     for widget in root.winfo_children():
         widget.destroy()
     view_payment(root, id)
+
+""" CONFIM PAYMENT """
+def confirm_payment(root, id, bank, acct_num):
+    px, py = 10, 10
+    inv_num = random.randint(10**3, 10**5)
+    welcome_lbl = Label(root, text="Purchase with ID {} completed. Thank you!". format(inv_num))
+    welcome_lbl.grid(row=0, column=2, padx=px, pady=py)
+    
+    try:
+        connection = mysql.connector.connect(host='localhost',
+                                             database=working_database,
+                                             user='root',
+                                             password=mysql_password)
+        if connection.is_connected():
+            cursor = connection.cursor(buffered=True)
+            cursor.execute('select database();')
+        
+            """ Queries to  """
+            
+            go_home = partial(change_to_home_page, "", id)
+            back_home = Button(root, text="Home", bg='#ecbcbc', command=go_home).grid(row=1, column=2, padx=px, pady=py)
+
+    except Error as e:
+        print('Error while connecting to MySQL', e)
+
+    finally:
+        if (connection.is_connected()):
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+    root.geometry("800x600")
+
+def confirm_payment_page(id, bank, acct_num):
+    for widget in root.winfo_children():
+        widget.destroy()
+    confirm_payment(root, id, bank, acct_num)
 
 """ ADD TO CART PAGE """
 def add_to_cart(root, cat, disc, cat_id, item_id, quantity, id):
